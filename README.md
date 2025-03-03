@@ -96,4 +96,4 @@ npm run dev
 ## Product Manual
 A detailed product manual is available for download. Please refer to the documentation for further instructions.
 
-📄 **[Download Product Manual](https://github.com/HanGyeolLee94/finsight/docs/FinSight Product Manual.pdf)**
+📄 **[Download Product Manual](https://github.com/HanGyeolLee94/finsight/blob/fe9e59aa528760eea89b8190d584581f8720479b/docs/FinSight%20Product%20Manual.pdf)**
