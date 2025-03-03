@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="Schedule">
+
+<select id="selectList" resultType="map">
+SELECT 
+    SCHEDULE_ID,
+    CLASS_NAME,
+    METHOD_NAME,
+    CRON_EXPRESSION,
+    ENABLED,
+    DESCRIPTION,
+    DATE_FORMAT(CREATED_AT, '%Y-%m-%d %H:%i:%s') AS CREATED_AT,
+    DATE_FORMAT(UPDATED_AT, '%Y-%m-%d %H:%i:%s') AS UPDATED_AT
+FROM 
+    SCHEDULER_INFO
+<where>
+  <if test="SCHEDULE_ID != null and SCHEDULE_ID != ''">
+    AND SCHEDULE_ID = #{SCHEDULE_ID}
+  </if>
+  <if test="CLASS_NAME != null and CLASS_NAME != ''">
+    AND CLASS_NAME LIKE CONCAT('%', #{CLASS_NAME}, '%')
+  </if>
+  <if test="METHOD_NAME != null and METHOD_NAME != ''">
+    AND METHOD_NAME = #{METHOD_NAME}
+  </if>
+</where>
+</select>
+
+<select id="selectScheduleById" resultType="map">
+SELECT 
+    SCHEDULE_ID,
+    CLASS_NAME,
+    METHOD_NAME,
+    CRON_EXPRESSION,
+    ENABLED,
+    DATE_FORMAT(CREATED_AT, '%Y-%m-%d %H:%i:%s') AS CREATED_AT,
+    DATE_FORMAT(UPDATED_AT, '%Y-%m-%d %H:%i:%s') AS UPDATED_AT
+  FROM SCHEDULER_INFO
+ WHERE SCHEDULE_ID = #{SCHEDULE_ID}
+</select>
+
+    <!-- Insert Schedule -->
+    <insert id="insertSchedule" parameterType="map">
+        INSERT INTO SCHEDULER_INFO (
+            SCHEDULE_ID, 
+            CLASS_NAME, 
+            METHOD_NAME, 
+            CRON_EXPRESSION, 
+            ENABLED, 
+            CREATED_AT, 
+            UPDATED_AT
+        ) VALUES (
+            #{SCHEDULE_ID}, 
+            #{CLASS_NAME}, 
+            #{METHOD_NAME}, 
+            #{CRON_EXPRESSION}, 
+            #{ENABLED}, 
+            CURRENT_TIMESTAMP, 
+            CURRENT_TIMESTAMP
+        )
+    </insert>
+
+    <!-- Delete Schedule -->
+    <delete id="deleteSchedule" parameterType="map">
+        DELETE FROM SCHEDULER_INFO
+        WHERE SCHEDULE_ID = #{SCHEDULE_ID}
+    </delete>
+
+    <!-- Update Schedule -->
+    <update id="updateSchedule" parameterType="map">
+        UPDATE SCHEDULER_INFO
+        SET 
+            CLASS_NAME = #{CLASS_NAME}, 
+            METHOD_NAME = #{METHOD_NAME}, 
+            CRON_EXPRESSION = #{CRON_EXPRESSION}, 
+            ENABLED = #{ENABLED}, 
+            UPDATED_AT = CURRENT_TIMESTAMP
+        WHERE SCHEDULE_ID = #{SCHEDULE_ID}
+    </update>
+
+</mapper>

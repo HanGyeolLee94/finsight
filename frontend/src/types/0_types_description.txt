@@ -1,0 +1,2 @@
+Stores TypeScript type definitions.
+This folder is used for globally reusable types and interfaces.

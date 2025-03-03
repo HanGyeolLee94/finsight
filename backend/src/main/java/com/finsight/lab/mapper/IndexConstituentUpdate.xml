@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="IndexConstituentUpdate">
+
+    <!-- Query to get symbols that haven't been updated for more than 10 days -->
+    <select id="getOutdatedSymbols" resultType="map">
+		SELECT 
+		      COMBINED_LIST.SYMBOL
+		  FROM (
+		    SELECT SYMBOL FROM SNP500_LIST
+		    UNION ALL
+		    SELECT SYMBOL FROM DOWJONES_LIST
+		    UNION ALL
+		    SELECT SYMBOL FROM NASDAQ100_LIST
+		) AS COMBINED_LIST
+		  LEFT JOIN 
+		      FMP_QUOTE_DATA FQ
+		  ON 
+		      COMBINED_LIST.SYMBOL = FQ.SYMBOL
+		  WHERE 
+		      (SELECT COUNT(*) 
+		       FROM FMP_QUOTE_DATA 
+		       WHERE FQ.UPDATED_AT >= CURRENT_DATE 
+		         AND FQ.UPDATED_AT <![CDATA[<]]> CURRENT_DATE + INTERVAL 1 DAY) <![CDATA[<]]> 200
+		      AND (FQ.UPDATED_AT IS NULL 
+		           OR FQ.UPDATED_AT <![CDATA[<]]> NOW() - INTERVAL 10 DAY)
+		  LIMIT 100
+    </select>
+
+</mapper>

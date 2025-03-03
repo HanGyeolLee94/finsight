@@ -1,0 +1,3 @@
+Contains external libraries or utility functions that are specific to the application's domain logic.
+Examples include database queries or API client configurations.
+This folder often holds code closer to the business logic.

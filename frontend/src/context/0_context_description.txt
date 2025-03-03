@@ -1,0 +1,2 @@
+Used for managing global state with React Context API.
+Examples include user authentication state or theme settings.

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="IndexDataUpdate">
+
+<select id="checkIndexDataExists" resultType="int">
+    SELECT COUNT(*) FROM INDEX_DATA WHERE INDEX_CODE = #{INDEX_CODE}
+</select>
+
+
+<insert id="upsertIndexData" parameterType="map">
+    INSERT INTO INDEX_DATA (
+        INDEX_CODE, DATE, OPEN_VALUE, HIGH_VALUE, LOW_VALUE, CLOSE_VALUE, VOLUME, DIVIDENDS, STOCK_SPLITS
+    ) VALUES (
+        #{INDEX_CODE}, #{DATE}, #{OPEN_VALUE}, #{HIGH_VALUE}, #{LOW_VALUE}, #{CLOSE_VALUE}, #{VOLUME}, #{DIVIDENDS}, #{STOCK_SPLITS}
+    )
+    ON DUPLICATE KEY UPDATE
+        OPEN_VALUE = #{OPEN_VALUE},
+        HIGH_VALUE = #{HIGH_VALUE},
+        LOW_VALUE = #{LOW_VALUE},
+        CLOSE_VALUE = #{CLOSE_VALUE},
+        VOLUME = #{VOLUME},
+        DIVIDENDS = #{DIVIDENDS},
+        STOCK_SPLITS = #{STOCK_SPLITS},
+        UPDATED_AT = CURRENT_TIMESTAMP
+</insert>
+</mapper>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="Menu">
+
+	<!-- UserInfo 테이블의 모든 데이터를 조회, 결과는 Map으로 반환 -->
+	<select id="selectMenu" resultType="map">
+		SELECT 
+		    MENU_ID, 
+		    P_MENU_ID, 
+		    MENU_NAME, 
+		    PATH, 
+		    ORDER_NUM,
+		    LEVEL
+		FROM 
+		    V_MENUHIERARCHY WHERE LANG_CODE = #{LANG_CODE}
+		ORDER BY SORT_ORDER;
+	</select>
+	<update id="updateMenu" parameterType="map">
+	    UPDATE MENU
+	    SET P_MENU_ID = #{P_MENU_ID},        
+	        PATH = #{PATH},                  
+	        ORDER_NUM = #{ORDER_NUM},        
+	        UPDATED_AT = CURRENT_TIMESTAMP   
+	    WHERE
+	        MENU_ID = #{MENU_ID}            
+	</update>
+	<update id="updateMenuName" parameterType="map">
+	    UPDATE MENU_NAME
+	    SET
+	        MENU_NAME = #{MENU_NAME},        
+	        UPDATED_AT = CURRENT_TIMESTAMP    
+	    WHERE
+	        MENU_ID = #{MENU_ID}             
+	        AND LANG_CODE = #{LANG_CODE}      
+	</update>
+
+</mapper>
+

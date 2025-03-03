@@ -1,0 +1,2 @@
+Includes code related to state management libraries like Redux or Zustand.
+This folder typically holds state-related logic and store configuration.

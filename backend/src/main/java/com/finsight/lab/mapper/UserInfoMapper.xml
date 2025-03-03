@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="UserInfoMapper">
+
+	<!-- UserInfo 테이블의 모든 데이터를 조회, 결과는 Map으로 반환 -->
+	<select id="getAllUsers" resultType="map">
+		SELECT
+		USER_ID,
+		USERNAME,
+		EMAIL,
+		PASSWORD_HASH,
+		USE_YN,
+		ROLE_ID,
+		DATE_FORMAT(CREATED_AT, '%Y/%m/%d %H:%i:%s') AS CREATED_AT,
+		DATE_FORMAT(UPDATED_AT, '%Y/%m/%d %H:%i:%s') AS UPDATED_AT
+		FROM USER_INFO
+		<where>
+			<!-- Check for the USERNAME parameter -->
+			<if test="USERNAME != null and USERNAME != ''">
+				AND USERNAME LIKE CONCAT('%', #{USERNAME}, '%')
+			</if>
+			<!-- Check for the EMAIL parameter -->
+			<if test="EMAIL != null and EMAIL != ''">
+				AND EMAIL LIKE CONCAT('%', #{EMAIL}, '%')
+			</if>
+			<if test="ROLE_ID != null and ROLE_ID != ''">
+				AND ROLE_ID = #{ROLE_ID}
+			</if>
+		</where>
+	</select>
+
+	<!-- 특정 사용자 ID로 데이터를 조회, parameterType 생략 -->
+	<select id="findById" resultType="map">
+		SELECT * FROM USER_INFO WHERE
+		USER_ID = #{userId}
+	</select>
+	<!-- [20241002 lhg] Inserts user information into USER_INFO table. -->
+	<insert id="insertUser">
+		INSERT INTO USER_INFO (USERNAME, EMAIL, PASSWORD_RESET_REQUIRED,
+		PASSWORD_HASH, ROLE_ID, CREATED_AT,
+		UPDATED_AT)
+		VALUES (#{USERNAME}, #{EMAIL}, 'Y',
+		#{PASSWORD_HASH}, #{ROLE_ID}, CURRENT_TIMESTAMP,
+		CURRENT_TIMESTAMP)
+	</insert>
+
+	<update id="updateUser">
+		UPDATE USER_INFO
+		SET USERNAME = #{USERNAME},
+		ROLE_ID = #{ROLE_ID},
+		UPDATED_AT = CURRENT_TIMESTAMP
+		WHERE USER_ID = #{USER_ID}
+	</update>
+
+	<delete id="deleteUser">
+		DELETE FROM USER_INFO WHERE USER_ID = #{USER_ID}
+	</delete>
+	
+    <select id="getDefaultPage" resultType="string">
+        SELECT DEFAULT_PAGE 
+        FROM USER_INFO
+        WHERE EMAIL = #{EMAIL}
+    </select>
+
+	<select id="getDefaultPagePath" resultType="string">
+	    SELECT M.PATH
+	    FROM USER_INFO U
+	    JOIN MENU M ON U.DEFAULT_PAGE = M.MENU_ID
+	    WHERE U.EMAIL = #{EMAIL}
+	</select>
+    	
+	<update id="setDefaultPage" parameterType="map">
+	    UPDATE USER_INFO
+	    SET DEFAULT_PAGE = #{DEFAULT_PAGE}
+	    WHERE EMAIL = #{EMAIL}
+	</update>
+</mapper>

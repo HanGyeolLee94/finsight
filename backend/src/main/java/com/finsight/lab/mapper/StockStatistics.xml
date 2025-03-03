@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="StockStatistics">
+    <!-- Get all stock symbols -->
+    <select id="getAllSymbols" resultType="string">
+        SELECT SYMBOL FROM FMP_QUOTE_DATA;
+    </select>
+
+    <!-- Get the last 15 closing prices for a stock -->
+    <select id="getStockPrices" resultType="map">
+        SELECT CLOSE_PRICE 
+        FROM FMP_HISTORICAL_DATA
+        WHERE SYMBOL = #{symbol}
+        ORDER BY DATE DESC
+        LIMIT 15;
+    </select>
+
+    <!-- RSI 데이터 배치 INSERT 또는 UPDATE -->
+    <update id="batchUpsertRSI">
+        INSERT INTO STOCK_STATISTICS (SYMBOL, RSI, UPDATED_AT) 
+        VALUES (#{symbol, jdbcType=VARCHAR}, #{rsi, jdbcType=DOUBLE}, NOW())
+        ON DUPLICATE KEY UPDATE 
+            RSI = #{rsi, jdbcType=DOUBLE}, 
+            UPDATED_AT = NOW();
+    </update>
+</mapper>

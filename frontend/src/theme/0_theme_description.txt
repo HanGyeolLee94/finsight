@@ -1,0 +1,1 @@
+Contains files related to the application's styling, such as MUI themes, SCSS variables, or global CSS files.

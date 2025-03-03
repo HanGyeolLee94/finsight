@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="TechnicalAnalysis">
+
+<select id="selectTickers" resultType="map">
+SELECT SYMBOL AS ID
+     , NAME AS TEXT
+  FROM FMP_QUOTE_DATA
+</select>
+
+    <select id="getClosePrices" resultType="map">
+        SELECT DATE, CLOSE_PRICE 
+        FROM FMP_HISTORICAL_DATA
+        WHERE SYMBOL = #{symbol}
+        ORDER BY DATE DESC
+    </select>
+    <delete id="deleteRSIHistory">
+        DELETE FROM RSI_HISTORY WHERE SYMBOL = #{symbol, jdbcType=VARCHAR}
+    </delete>
+    <update id="batchUpsertRSIHistory">
+        INSERT INTO RSI_HISTORY (SYMBOL, TRADE_DATE, RSI, UPDATED_AT) 
+        VALUES (#{symbol, jdbcType=VARCHAR},#{trade_date, jdbcType=VARCHAR}, #{rsi, jdbcType=DOUBLE}, NOW())
+        ON DUPLICATE KEY UPDATE 
+            RSI = #{rsi, jdbcType=DOUBLE}, 
+            UPDATED_AT = NOW()
+    </update>
+</mapper>

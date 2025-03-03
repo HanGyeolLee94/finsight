@@ -1,0 +1,2 @@
+Stores files related to internationalization (i18n).
+For example, JSON files for multi-language support.

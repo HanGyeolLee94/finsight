@@ -1,0 +1,415 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="Ticker">
+
+	<select id="selectOne" parameterType="map" resultType="map">
+		SELECT 
+		    Q.SYMBOL,
+		    Q.NAME,
+		    Q.PRICE,
+		    Q.CHANGES_PERCENTAGE,
+		    Q.CHANGE_VALUE,
+		    Q.DAY_LOW,
+		    Q.DAY_HIGH,
+		    Q.YEAR_HIGH,
+		    Q.YEAR_LOW,
+		    Q.MARKET_CAP,
+		    Q.PRICE_AVG_50,
+		    Q.PRICE_AVG_200,
+		    Q.EXCHANGE,
+		    Q.VOLUME,
+		    Q.AVG_VOLUME,
+		    Q.OPEN_PRICE,
+		    Q.PREVIOUS_CLOSE,
+		    Q.EPS,
+		    Q.PE,
+		    DATE_FORMAT(Q.EARNINGS_ANNOUNCEMENT, '%Y-%m-%d %H:%i:%s') AS EARNINGS_ANNOUNCEMENT,
+		    Q.SHARES_OUTSTANDING,
+		    Q.TIMESTAMP,
+		    Q.CREATED_AT,
+		    Q.UPDATED_AT,
+		    S.RSI
+		FROM 
+		    FMP_QUOTE_DATA Q
+		LEFT JOIN 
+		    STOCK_STATISTICS S ON Q.SYMBOL = S.SYMBOL
+		WHERE 
+		    Q.SYMBOL = #{SYMBOL}
+	</select>
+
+	<select id="selectList" resultType="map">
+		SELECT 
+		    SYMBOL,
+		    NAME,
+		    EXCHANGE,
+		    EXCHANGE_SHORT_NAME,
+		    TYPE,
+		    CREATED_AT,
+		    UPDATED_AT
+		FROM 
+		    FMP_STOCK_LIST
+		<where>
+			<if test="SYMBOL != null and SYMBOL != ''">
+				AND SYMBOL LIKE CONCAT('%', #{SYMBOL}, '%')
+			</if>
+			<if test="NAME != null and NAME != ''">
+				AND NAME LIKE CONCAT('%', #{NAME}, '%')
+			</if>
+			<if test="TYPE != null and TYPE != ''">
+				AND TYPE = #{TYPE}
+			</if>
+		</where>
+		LIMIT #{limit} OFFSET #{offset}
+	</select>
+
+	<select id="getTotalCount" resultType="int">
+		SELECT COUNT(*) FROM FMP_STOCK_LIST
+		<where>
+			<if test="SYMBOL != null and SYMBOL != ''">
+				AND UPPER(SYMBOL) LIKE CONCAT('%', UPPER(#{SYMBOL}), '%')
+			</if>
+			<if test="NAME != null and NAME != ''">
+				AND UPPER(NAME) LIKE CONCAT('%', UPPER(#{NAME}), '%')
+			</if>
+			<if test="TYPE != null and TYPE != ''">
+				AND TYPE = #{TYPE}
+			</if>
+		</where>
+	</select>
+	<!-- Select Exist (check if record exists) -->
+	<select id="selectExist" resultType="map">
+		SELECT
+		SYMBOL
+		FROM
+		POLYGON_SYMBOLS
+		WHERE
+		SYMBOL = #{SYMBOL}
+	</select>
+
+	<!-- Insert New Record -->
+	<insert id="insertOne">
+		INSERT INTO POLYGON_SYMBOLS (
+		SYMBOL,
+		NAME,
+		MARKET,
+		LOCALE,
+		PRIMARY_EXCHANGE,
+		TYPE,
+		ACTIVE,
+		CURRENCY_NAME,
+		CIK,
+		COMPOSITE_FIGI,
+		SHARE_CLASS_FIGI,
+		LAST_UPDATED_UTC
+		) VALUES (
+		#{SYMBOL},
+		#{NAME},
+		#{MARKET},
+		#{LOCALE},
+		#{PRIMARY_EXCHANGE},
+		#{TYPE},
+		#{ACTIVE},
+		#{CURRENCY_NAME},
+		#{CIK},
+		#{COMPOSITE_FIGI},
+		#{SHARE_CLASS_FIGI},
+		#{LAST_UPDATED_UTC}
+		)
+	</insert>
+
+	<!-- Update Existing Record -->
+	<update id="updateOne">
+		UPDATE POLYGON_SYMBOLS
+		SET
+		NAME = #{NAME},
+		MARKET = #{MARKET},
+		LOCALE = #{LOCALE},
+		PRIMARY_EXCHANGE = #{PRIMARY_EXCHANGE},
+		TYPE = #{TYPE},
+		ACTIVE = #{ACTIVE},
+		CURRENCY_NAME = #{CURRENCY_NAME},
+		CIK = #{CIK},
+		COMPOSITE_FIGI = #{COMPOSITE_FIGI},
+		SHARE_CLASS_FIGI = #{SHARE_CLASS_FIGI},
+		LAST_UPDATED_UTC = #{LAST_UPDATED_UTC},
+		UPDATED_AT = CURRENT_TIMESTAMP
+		WHERE
+		SYMBOL = #{SYMBOL}
+	</update>
+
+	<select id="getTickerRecommendations" resultType="map">
+		SELECT
+		NAME AS TEXT,
+		SYMBOL AS ID
+		FROM
+		FMP_STOCK_LIST
+		WHERE
+		UPPER(SYMBOL) LIKE CONCAT(UPPER(#{query}), '%')
+		ORDER BY SYMBOL
+		LIMIT 10
+	</select>
+
+	<select id="selectAssetTypes" resultType="map">
+		SELECT TYPE AS ID,
+		TYPE AS TEXT FROM FMP_STOCK_TYPE
+		ORDER BY TYPE
+	</select>
+
+	<select id="getDailyClosePricesBySymbol" resultType="map">
+	    SELECT 
+	        DATE,
+	        CLOSE_PRICE 
+	    FROM 
+	        FMP_HISTORICAL_DATA 
+	    WHERE 
+	        SYMBOL = #{SYMBOL}
+	        <if test="STARTDATE != null">
+	            AND DATE >= #{STARTDATE}
+	        </if>
+	    ORDER BY 
+	        DATE ASC
+	</select>
+	
+	<select id="getDailyPerBySymbol" resultType="map">
+		SELECT 
+		    H.DATE,
+		    H.CLOSE_PRICE,
+		    I.EPS,
+		    CASE 
+		        WHEN (H.CLOSE_PRICE / I.EPS) > 100 THEN 100
+		        ELSE (H.CLOSE_PRICE / I.EPS)
+		    END AS PER
+	    FROM 
+	        FMP_HISTORICAL_DATA H
+	    LEFT JOIN FMP_QUOTE_DATA I ON H.SYMBOL = I.SYMBOL
+	    WHERE 
+	        H.SYMBOL = #{SYMBOL}
+	        <if test="STARTDATE != null">
+	            AND H.DATE >= #{STARTDATE}
+	        </if>
+	    ORDER BY H.DATE
+	</select>
+	<select id="getEps" resultType="map">
+	    SELECT 
+	        CAST(YEAR(FILLING_DATE) - 1 AS CHAR) AS CALENDAR_YEAR, 
+	        EPS, 
+	        EPS_DILUTED
+	    FROM 
+	        FMP_INCOME_STATEMENT A
+	    WHERE 
+	        SYMBOL = #{SYMBOL} 
+	        AND PERIOD = 'FY'
+	        <if test="STARTDATE != null">
+	            AND A.FILLING_DATE >= #{STARTDATE}
+	        </if>
+	</select>
+	<select id="getRatioChartData" resultType="map">
+	    SELECT 
+	        CAST(YEAR(FILLING_DATE) - 1 AS CHAR) AS CALENDAR_YEAR, 
+			GROSS_PROFIT_RATIO, 
+		    NET_INCOME_RATIO, 
+		    EBITDARATIO
+	    FROM 
+	        FMP_INCOME_STATEMENT A
+	    WHERE 
+	        SYMBOL = #{SYMBOL}
+	        AND PERIOD = 'FY'
+	        <if test="STARTDATE != null">
+	            AND A.FILLING_DATE >= #{STARTDATE}
+	        </if>
+	</select>
+	<select id="getRevenueChartData" resultType="map">
+		SELECT 
+		    CAST(YEAR(FILLING_DATE) - 1 AS CHAR) AS CALENDAR_YEAR, 
+		    REVENUE, 
+		    COST_OF_REVENUE, 
+		    GROSS_PROFIT
+	    FROM 
+	        FMP_INCOME_STATEMENT A
+	    WHERE 
+	        SYMBOL = #{SYMBOL}
+	        AND PERIOD = 'FY'
+	        <if test="STARTDATE != null">
+	            AND A.FILLING_DATE >= #{STARTDATE}
+	        </if>
+	</select>
+	<select id="getFreeCashFlowChartData" resultType="map">
+		SELECT 
+		    CAST(YEAR(FILLING_DATE) - 1 AS CHAR) AS CALENDAR_YEAR, 
+		    FREE_CASH_FLOW, 
+		    NET_INCOME 
+		FROM 
+		    FMP_CASH_FLOW_STATEMENT
+		WHERE 
+        SYMBOL = #{SYMBOL}
+        AND PERIOD = 'FY'
+        <if test="STARTDATE != null">
+            AND FILLING_DATE >= #{STARTDATE}
+        </if>
+	</select>
+	<select id="getCashFlowBreakdownChartData" resultType="map">
+		SELECT 
+		    CAST(YEAR(FILLING_DATE) - 1 AS CHAR) AS CALENDAR_YEAR, 
+		    NET_CASH_PROVIDED_BY_OPERATING_ACTIVITIES AS OPERATING_CASH_FLOW, 
+		    NET_CASH_USED_FOR_INVESTING_ACTIVITIES AS INVESTING_CASH_FLOW, 
+		    NET_CASH_USED_PROVIDED_BY_FINANCING_ACTIVITIES AS FINANCING_CASH_FLOW,
+		    CAPITAL_EXPENDITURE
+		FROM 
+		    FMP_CASH_FLOW_STATEMENT
+		WHERE 
+        SYMBOL = #{SYMBOL}
+        AND PERIOD = 'FY'
+        <if test="STARTDATE != null">
+            AND FILLING_DATE >= #{STARTDATE}
+        </if>
+	</select>
+	<select id="getIncomeStatement" resultType="map">
+		SELECT DATE
+		     , REPORTED_CURRENCY
+		     , REVENUE
+		     , COST_OF_REVENUE
+		     , GROSS_PROFIT
+		     , GROSS_PROFIT_RATIO
+		     , RESEARCH_AND_DEVELOPMENT_EXPENSES
+		     , SELLING_AND_MARKETING_EXPENSES
+		     , GENERAL_AND_ADMINISTRATIVE_EXPENSES
+		     , SELLING_GENERAL_AND_ADMINISTRATIVE_EXPENSES
+		     , OTHER_EXPENSES
+		     , OPERATING_EXPENSES
+		     , COST_AND_EXPENSES
+		     , INTEREST_INCOME
+		     , INTEREST_EXPENSE
+		     , DEPRECIATION_AND_AMORTIZATION
+		     , EBITDA
+		     , EBITDARATIO
+		     , OPERATING_INCOME
+		     , OPERATING_INCOME_RATIO
+		     , TOTAL_OTHER_INCOME_EXPENSES_NET
+		     , INCOME_BEFORE_TAX
+		     , INCOME_BEFORE_TAX_RATIO
+		     , INCOME_TAX_EXPENSE
+		     , NET_INCOME
+		     , NET_INCOME_RATIO
+		     , EPS
+		     , EPS_DILUTED
+		     , WEIGHTED_AVERAGE_SHS_OUT
+		     , WEIGHTED_AVERAGE_SHS_OUT_DIL
+		FROM 
+		    FMP_INCOME_STATEMENT
+		WHERE 
+		    SYMBOL = #{SYMBOL}
+		    AND PERIOD = #{PERIOD}
+		    AND CALENDAR_YEAR >= YEAR(CURDATE()) - 10 -- 최근 5개년 기준
+		ORDER BY 
+		    CALENDAR_YEAR DESC
+	</select>
+	
+	<select id="getBalanceSheet" resultType="map">
+	    SELECT SYMBOL                                          /** 심볼 */
+	         , CALENDAR_YEAR                                   /** 회계 연도 */
+	         , PERIOD                                          /** 기간 */
+	         , FILLING_DATE                                    /** 보고 제출일 */
+	         , ACCEPTED_DATE                                   /** 수리 날짜 */
+	         , REPORTED_CURRENCY                               /** 보고 통화 */
+	         , CASH_AND_CASH_EQUIVALENTS                       /** 현금 및 현금 등가물 */
+	         , SHORT_TERM_INVESTMENTS                          /** 단기 투자 */
+	         , CASH_AND_SHORT_TERM_INVESTMENTS                 /** 현금 및 단기 투자 합계 */
+	         , NET_RECEIVABLES                                 /** 순수익금 */
+	         , INVENTORY                                       /** 재고 자산 */
+	         , OTHER_CURRENT_ASSETS                            /** 기타 유동 자산 */
+	         , TOTAL_CURRENT_ASSETS                            /** 총 유동 자산 */
+	         , PROPERTY_PLANT_EQUIPMENT_NET                    /** 순설비, 자산 및 장비 */
+	         , GOODWILL                                        /** 영업권 */
+	         , INTANGIBLE_ASSETS                               /** 무형 자산 */
+	         , GOODWILL_AND_INTANGIBLE_ASSETS                  /** 영업권 및 무형 자산 */
+	         , LONG_TERM_INVESTMENTS                           /** 장기 투자 */
+	         , TAX_ASSETS                                      /** 세금 자산 */
+	         , OTHER_NON_CURRENT_ASSETS                        /** 기타 비유동 자산 */
+	         , TOTAL_NON_CURRENT_ASSETS                        /** 총 비유동 자산 */
+	         , OTHER_ASSETS                                    /** 기타 자산 */
+	         , TOTAL_ASSETS                                    /** 총 자산 */
+	         , ACCOUNT_PAYABLES                                /** 미지급금 */
+	         , SHORT_TERM_DEBT                                 /** 단기 부채 */
+	         , TAX_PAYABLES                                    /** 납부세액 */
+	         , DEFERRED_REVENUE                                /** 이연 수익 */
+	         , OTHER_CURRENT_LIABILITIES                       /** 기타 유동 부채 */
+	         , TOTAL_CURRENT_LIABILITIES                       /** 총 유동 부채 */
+	         , LONG_TERM_DEBT                                  /** 장기 부채 */
+	         , DEFERRED_REVENUE_NON_CURRENT                    /** 비유동 이연 수익 */
+	         , DEFERRED_TAX_LIABILITIES_NON_CURRENT            /** 비유동 이연 세금 부채 */
+	         , OTHER_NON_CURRENT_LIABILITIES                   /** 기타 비유동 부채 */
+	         , TOTAL_NON_CURRENT_LIABILITIES                   /** 총 비유동 부채 */
+	         , OTHER_LIABILITIES                               /** 기타 부채 */
+	         , CAPITAL_LEASE_OBLIGATIONS                       /** 자본 임대 의무 */
+	         , TOTAL_LIABILITIES                               /** 총 부채 */
+	         , PREFERRED_STOCK                                 /** 우선주 */
+	         , COMMON_STOCK                                    /** 보통주 */
+	         , RETAINED_EARNINGS                               /** 이익 잉여금 */
+	         , ACCUMULATED_OTHER_COMPREHENSIVE_INCOME_LOSS     /** 기타포괄손익누계액 */
+	         , OTHER_TOTAL_STOCKHOLDERS_EQUITY                 /** 기타 주주 자본 합계 */
+	         , TOTAL_STOCKHOLDERS_EQUITY                       /** 총 주주 자본 */
+	         , TOTAL_EQUITY                                    /** 총 자본 */
+	         , TOTAL_LIABILITIES_AND_STOCKHOLDERS_EQUITY       /** 총 부채 및 주주 자본 */
+	         , MINORITY_INTEREST                               /** 소수 지분 */
+	         , TOTAL_LIABILITIES_AND_TOTAL_EQUITY              /** 총 부채 및 총 자본 */
+	         , TOTAL_INVESTMENTS                               /** 총 투자 */
+	         , TOTAL_DEBT                                      /** 총 부채 */
+	         , NET_DEBT                                        /** 순부채 */
+	         , LINK                                            /** 링크 */
+	         , FINAL_LINK                                      /** 최종 링크 */
+	    FROM FMP_BALANCE_SHEET
+	    WHERE SYMBOL = #{SYMBOL}
+	      AND PERIOD = #{PERIOD}
+	      AND CALENDAR_YEAR >= YEAR(CURDATE()) - 10 /** 최근 5개년 기준 */
+	    ORDER BY CALENDAR_YEAR DESC;
+	</select>
+	<select id="getCashFlowStatement" resultType="map">
+	    SELECT SYMBOL                                          /** Symbol */
+	         , CALENDAR_YEAR                                   /** Calendar Year */
+	         , PERIOD                                          /** Period */
+	         , DATE                                            /** Date */
+	         , REPORTED_CURRENCY                               /** Reported Currency */
+	         , CIK                                             /** CIK */
+	         , FILLING_DATE                                    /** Filling Date */
+	         , ACCEPTED_DATE                                   /** Accepted Date */
+	         , NET_INCOME                                      /** Net Income */
+	         , DEPRECIATION_AND_AMORTIZATION                  /** Depreciation and Amortization */
+	         , DEFERRED_INCOME_TAX                             /** Deferred Income Tax */
+	         , STOCK_BASED_COMPENSATION                        /** Stock-Based Compensation */
+	         , CHANGE_IN_WORKING_CAPITAL                       /** Change in Working Capital */
+	         , ACCOUNTS_RECEIVABLES                            /** Accounts Receivables */
+	         , INVENTORY                                       /** Inventory */
+	         , ACCOUNTS_PAYABLES                               /** Accounts Payables */
+	         , OTHER_WORKING_CAPITAL                           /** Other Working Capital */
+	         , OTHER_NON_CASH_ITEMS                            /** Other Non-Cash Items */
+	         , NET_CASH_PROVIDED_BY_OPERATING_ACTIVITIES       /** Net Cash Provided by Operating Activities */
+	         , INVESTMENTS_IN_PROPERTY_PLANT_AND_EQUIPMENT     /** Investments in Property, Plant, and Equipment */
+	         , ACQUISITIONS_NET                                /** Acquisitions Net */
+	         , PURCHASES_OF_INVESTMENTS                        /** Purchases of Investments */
+	         , SALES_MATURITIES_OF_INVESTMENTS                 /** Sales/Maturities of Investments */
+	         , OTHER_INVESTING_ACTIVITIES                      /** Other Investing Activities */
+	         , NET_CASH_USED_FOR_INVESTING_ACTIVITIES          /** Net Cash Used for Investing Activities */
+	         , DEBT_REPAYMENT                                  /** Debt Repayment */
+	         , COMMON_STOCK_ISSUED                             /** Common Stock Issued */
+	         , COMMON_STOCK_REPURCHASED                        /** Common Stock Repurchased */
+	         , DIVIDENDS_PAID                                  /** Dividends Paid */
+	         , OTHER_FINANCING_ACTIVITIES                      /** Other Financing Activities */
+	         , NET_CASH_USED_PROVIDED_BY_FINANCING_ACTIVITIES  /** Net Cash Used/Provided by Financing Activities */
+	         , EFFECT_OF_FOREX_CHANGES_ON_CASH                 /** Effect of Forex Changes on Cash */
+	         , NET_CHANGE_IN_CASH                              /** Net Change in Cash */
+	         , CASH_AT_END_OF_PERIOD                           /** Cash at End of Period */
+	         , CASH_AT_BEGINNING_OF_PERIOD                     /** Cash at Beginning of Period */
+	         , OPERATING_CASH_FLOW                             /** Operating Cash Flow */
+	         , CAPITAL_EXPENDITURE                             /** Capital Expenditure */
+	         , FREE_CASH_FLOW                                  /** Free Cash Flow */
+	         , LINK                                            /** Link */
+	         , FINAL_LINK                                      /** Final Link */
+	    FROM FMP_CASH_FLOW_STATEMENT
+	    WHERE SYMBOL = #{SYMBOL}
+	      AND PERIOD = #{PERIOD}
+	      AND CALENDAR_YEAR >= YEAR(CURDATE()) - 10 /** Last 5 Years */
+	    ORDER BY CALENDAR_YEAR DESC;
+	</select>
+
+</mapper>

@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="Polygon">
+
+	<insert id="insertTicker">
+		INSERT INTO POLYGON_TICKERS (
+		TICKER, NAME, MARKET,
+		LOCALE, PRIMARY_EXCHANGE, TYPE, ACTIVE,
+		CURRENCY_NAME, CIK,
+		COMPOSITE_FIGI, SHARE_CLASS_FIGI, LAST_UPDATED_UTC
+		) VALUES (
+		#{TICKER}, #{NAME}, #{MARKET}, #{LOCALE}, #{PRIMARY_EXCHANGE},
+		#{TYPE},
+		#{ACTIVE},
+		#{CURRENCY_NAME}, #{CIK}, #{COMPOSITE_FIGI},
+		#{SHARE_CLASS_FIGI}, #{LAST_UPDATED_UTC}
+		)
+	</insert>
+
+	<update id="updateTicker">
+		UPDATE POLYGON_TICKERS
+		SET
+		NAME = #{NAME},
+		MARKET =
+		#{MARKET},
+		LOCALE = #{LOCALE},
+		PRIMARY_EXCHANGE = #{PRIMARY_EXCHANGE},
+		TYPE = #{TYPE},
+		ACTIVE = #{ACTIVE},
+		CURRENCY_NAME = #{CURRENCY_NAME},
+		CIK = #{CIK},
+		COMPOSITE_FIGI = #{COMPOSITE_FIGI},
+		SHARE_CLASS_FIGI =
+		#{SHARE_CLASS_FIGI},
+		LAST_UPDATED_UTC = #{LAST_UPDATED_UTC}
+		WHERE TICKER
+		= #{TICKER}
+	</update>
+
+	<select id="tickerExists" resultType="boolean">
+		SELECT COUNT(*) > 0
+		FROM
+		POLYGON_TICKERS
+		WHERE TICKER = #{TICKER}
+	</select>
+
+	<select id="tickerDetailExists" parameterType="String"
+		resultType="boolean">
+		SELECT COUNT(1)
+		FROM POLYGON_TICKER_DETAIL
+		WHERE TICKER =
+		#{TICKER}
+	</select>
+
+	<insert id="insertTickerDetail" parameterType="map">
+		INSERT INTO
+		POLYGON_TICKER_DETAIL (TICKER, MARKET_CAP, PHONE_NUMBER,
+		ADDRESS1,
+		CITY, STATE, POSTAL_CODE, DESCRIPTION, SIC_CODE,
+		SIC_DESCRIPTION,
+		TICKER_ROOT, HOMEPAGE_URL, TOTAL_EMPLOYEES,
+		LIST_DATE, LOGO_URL,
+		ICON_URL, SHARE_CLASS_SHARES_OUTSTANDING,
+		WEIGHTED_SHARES_OUTSTANDING,
+		ROUND_LOT)
+		VALUES (#{TICKER}, #{MARKET_CAP}, #{PHONE_NUMBER},
+		#{ADDRESS1}, #{CITY},
+		#{STATE}, #{POSTAL_CODE}, #{DESCRIPTION},
+		#{SIC_CODE},
+		#{SIC_DESCRIPTION}, #{TICKER_ROOT}, #{HOMEPAGE_URL},
+		#{TOTAL_EMPLOYEES}, #{LIST_DATE}, #{LOGO_URL}, #{ICON_URL},
+		#{SHARE_CLASS_SHARES_OUTSTANDING}, #{WEIGHTED_SHARES_OUTSTANDING},
+		#{ROUND_LOT})
+	</insert>
+
+	<update id="updateTickerDetail" parameterType="map">
+		UPDATE
+		POLYGON_TICKER_DETAIL
+		SET MARKET_CAP = #{MARKET_CAP}, PHONE_NUMBER =
+		#{PHONE_NUMBER}, ADDRESS1 = #{ADDRESS1}, CITY = #{CITY}, STATE =
+		#{STATE}, POSTAL_CODE = #{POSTAL_CODE}, DESCRIPTION = #{DESCRIPTION},
+		SIC_CODE = #{SIC_CODE},
+		SIC_DESCRIPTION = #{SIC_DESCRIPTION},
+		TICKER_ROOT = #{TICKER_ROOT},
+		HOMEPAGE_URL = #{HOMEPAGE_URL},
+		TOTAL_EMPLOYEES = #{TOTAL_EMPLOYEES},
+		LIST_DATE = #{LIST_DATE},
+		LOGO_URL = #{LOGO_URL}, ICON_URL = #{ICON_URL},
+		SHARE_CLASS_SHARES_OUTSTANDING = #{SHARE_CLASS_SHARES_OUTSTANDING},
+		WEIGHTED_SHARES_OUTSTANDING = #{WEIGHTED_SHARES_OUTSTANDING},
+		ROUND_LOT = #{ROUND_LOT}
+		WHERE TICKER = #{TICKER}
+	</update>
+
+	<select id="getOutdatedOrMissingTickers" resultType="String">
+		SELECT
+		PT.TICKER
+		FROM POLYGON_TICKERS PT
+		LEFT JOIN POLYGON_TICKER_DETAIL PTD ON
+		PT.TICKER = PTD.TICKER
+		WHERE PTD.TICKER IS NULL
+		OR PTD.UPDATED_AT &lt;
+		DATE_SUB(NOW(), INTERVAL 1 MONTH)
+	</select>
+
+	<!-- Check if ticker type exists -->
+	<select id="checkTickerTypeExists" parameterType="map"
+		resultType="int">
+		SELECT COUNT(1) FROM POLYGON_TICKER_TYPES WHERE CODE =
+		#{CODE}
+	</select>
+
+	<!-- Insert ticker type -->
+	<insert id="insertTickerType" parameterType="map">
+		INSERT INTO
+		POLYGON_TICKER_TYPES (CODE, DESCRIPTION, ASSET_CLASS, LOCALE,
+		CREATED_AT, UPDATED_AT)
+		VALUES (#{CODE}, #{DESCRIPTION},
+		#{ASSET_CLASS}, #{LOCALE},
+		CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+	</insert>
+
+	<!-- Update ticker type -->
+	<update id="updateTickerType" parameterType="map">
+		UPDATE
+		POLYGON_TICKER_TYPES
+		SET DESCRIPTION = #{DESCRIPTION},
+		ASSET_CLASS =
+		#{ASSET_CLASS},
+		LOCALE = #{LOCALE},
+		UPDATED_AT = CURRENT_TIMESTAMP
+		WHERE
+		CODE = #{CODE}
+	</update>
+
+	<!-- Check if grouped daily data exists (based on ticker and trade date) -->
+	<select id="groupedDataExists" parameterType="map" resultType="boolean">
+		SELECT COUNT(1)
+		FROM POLYGON_GROUPED_DAILY_DATA
+		WHERE TICKER = #{TICKER}
+		AND TRADE_DATE = #{TRADE_DATE};
+	</select>
+
+	<!-- Insert new grouped daily data -->
+	<insert id="insertGroupedData" parameterType="map">
+		INSERT INTO POLYGON_GROUPED_DAILY_DATA (
+		TICKER,
+		TRADE_DATE,
+		CLOSE_PRICE,
+		HIGH_PRICE,
+		LOW_PRICE,
+		OPEN_PRICE,
+		NUMBER_OF_TRANSACTIONS,
+		TRADING_VOLUME,
+		VOLUME_WEIGHTED_AVERAGE_PRICE,
+		CREATED_AT,
+		UPDATED_AT
+		) VALUES (
+		#{TICKER},
+		#{TRADE_DATE},
+		#{CLOSE_PRICE},
+		#{HIGH_PRICE},
+		#{LOW_PRICE},
+		#{OPEN_PRICE},
+		#{NUMBER_OF_TRANSACTIONS},
+		#{TRADING_VOLUME},
+		#{VOLUME_WEIGHTED_AVERAGE_PRICE},
+		CURRENT_TIMESTAMP,
+		CURRENT_TIMESTAMP
+		);
+	</insert>
+    <!-- Check if a daily open-close record exists for a specific SYMBOL and TRADE_DATE -->
+    <select id="dailyOpenCloseExists" parameterType="map" resultType="boolean">
+        SELECT COUNT(1) > 0
+        FROM POLYGON_DAILY_OPEN_CLOSE
+        WHERE SYMBOL = #{SYMBOL} AND TRADE_DATE = #{TRADE_DATE}
+    </select>
+
+    <!-- Insert a new daily open-close record -->
+    <insert id="insertDailyOpenClose" parameterType="map">
+        INSERT INTO POLYGON_DAILY_OPEN_CLOSE (
+            SYMBOL, TRADE_DATE, AFTER_HOURS, CLOSE_PRICE, HIGH_PRICE, LOW_PRICE, 
+            OPEN_PRICE, PRE_MARKET, STATUS, VOLUME
+        ) VALUES (
+            #{SYMBOL}, #{TRADE_DATE}, #{AFTER_HOURS}, #{CLOSE_PRICE}, 
+            #{HIGH_PRICE}, #{LOW_PRICE}, #{OPEN_PRICE}, #{PRE_MARKET}, 
+            #{STATUS}, #{VOLUME}
+        )
+    </insert>
+</mapper>

@@ -1,0 +1,2 @@
+Holds global configuration files for the application.
+This may include API endpoints, environment variables, and global constants.

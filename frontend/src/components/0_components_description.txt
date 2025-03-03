@@ -1,0 +1,2 @@
+Stores reusable React components.
+This includes UI elements or widgets that can be used across multiple pages.

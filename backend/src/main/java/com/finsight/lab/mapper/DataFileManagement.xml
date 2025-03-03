@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="DataFileManagement">
+
+
+<insert id="insertFileUploadHistory" parameterType="map">
+    INSERT INTO FILE_UPLOAD_HISTORY (
+        ID,
+        FILE_NAME,
+        UNIQUE_FILE_NAME,
+        UPLOADED_BY,
+        UPLOAD_DATE,
+        FILE_URL,
+        ACTION_TYPE
+    ) VALUES (
+        #{ID},
+        #{FILE_NAME},
+        #{UNIQUE_FILE_NAME},
+        #{UPLOADED_BY},
+        CURRENT_TIMESTAMP,
+        #{FILE_URL},
+        #{ACTION_TYPE}
+    )
+</insert>
+<select id="getFileUploadHistory" resultType="map">
+	SELECT 
+	    A.ID,
+	    A.FILE_NAME,
+	    A.UNIQUE_FILE_NAME,
+	    DATE_FORMAT(A.UPLOAD_DATE, '%Y-%m-%d %H:%i:%s') AS UPLOAD_DATE,
+	    A.FILE_URL,
+	    A.ACTION_TYPE,
+	    B.USERNAME AS UPLOADED_BY
+	  FROM FILE_UPLOAD_HISTORY A
+	  LEFT OUTER JOIN USER_INFO B ON A.UPLOADED_BY = B.USER_ID
+	 WHERE A.ACTION_TYPE = #{ACTION_TYPE}
+	ORDER BY UPLOAD_DATE DESC
+</select>
+
+<delete id="deleteFileUploadHistory" parameterType="list">
+    DELETE FROM FILE_UPLOAD_HISTORY
+    WHERE ID IN
+    <foreach item="id" index="index" collection="list" open="(" separator="," close=")">
+        #{id}
+    </foreach>
+</delete>
+
+<update id="truncateNasdaq100List">
+    TRUNCATE TABLE NASDAQ100_LIST
+</update>
+
+<insert id="batchInsertNasdaq100List">
+    INSERT INTO NASDAQ100_LIST (SYMBOL)
+    VALUES
+    <foreach collection="symbols" item="symbol" separator=",">
+        (#{symbol})
+    </foreach>
+</insert>
+
+<update id="truncateDowjonesList">
+    TRUNCATE TABLE DOWJONES_LIST
+</update>
+
+<insert id="batchInsertDowjonesList">
+    INSERT INTO DOWJONES_LIST (SYMBOL)
+    VALUES
+    <foreach collection="symbols" item="symbol" separator=",">
+        (#{symbol})
+    </foreach>
+</insert>
+
+<!-- Truncate the SNP500_LIST table -->
+<update id="truncateSnp500List">
+    TRUNCATE TABLE SNP500_LIST
+</update>
+
+<!-- Batch insert multiple symbols -->
+<insert id="batchInsertSnp500List">
+    INSERT INTO SNP500_LIST (SYMBOL)
+    VALUES
+    <foreach collection="symbols" item="symbol" separator=",">
+        (#{symbol})
+    </foreach>
+</insert>
+
+</mapper>

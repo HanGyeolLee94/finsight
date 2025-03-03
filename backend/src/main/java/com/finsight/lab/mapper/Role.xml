@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="Role">
+
+	<!-- UserInfo 테이블의 모든 데이터를 조회, 결과는 Map으로 반환 -->
+	<select id="selectRole" resultType="map">
+		SELECT ROLE_ID AS ID, ROLE_NAME AS TEXT FROM ROLES
+	</select>
+	
+	<select id="selectRoleMenuPermissions" resultType="map">
+SELECT 
+    MH.MENU_ID, 
+    MH.P_MENU_ID, 
+    MH.MENU_NAME, 
+    MH.PATH, 
+    MH.ORDER_NUM,
+    MH.LEVEL,
+    CASE 
+        WHEN MH.MENU_ID = 'role-info' THEN 'DY'  
+        ELSE COALESCE(RMP.CAN_VIEW, 'N') 
+    END AS CAN_VIEW,
+    CASE 
+        WHEN MH.MENU_ID = 'role-info' THEN 'DY'
+        WHEN MH.PATH IS NULL THEN 'DY' 
+        ELSE COALESCE(RMP.CAN_EDIT, 'N') 
+    END AS CAN_EDIT
+FROM 
+    V_MENUHIERARCHY MH
+    LEFT JOIN 
+    ROLE_MENU_PERMISSIONS RMP ON MH.MENU_ID = RMP.MENU_ID AND RMP.ROLE_ID = #{ROLE_ID}
+WHERE MH.LANG_CODE = 'en'
+ORDER BY MH.SORT_ORDER;
+	</select>
+
+  <!-- ROLE_ID와 MENU_ID로 ROLE_MENU_PERMISSIONS의 데이터를 검색 -->
+  <select id="selectOneRoleMenuPermission" resultType="map">
+    SELECT * FROM ROLE_MENU_PERMISSIONS
+    WHERE ROLE_ID = #{ROLE_ID} AND MENU_ID = #{MENU_ID}
+  </select>
+
+  <!-- INSERT -->
+  <insert id="insertRoleMenuPermissions">
+    INSERT INTO ROLE_MENU_PERMISSIONS (ROLE_ID, MENU_ID, CAN_VIEW, CAN_EDIT)
+    VALUES (#{ROLE_ID}, #{MENU_ID}, #{CAN_VIEW}, #{CAN_EDIT})
+  </insert>
+
+  <!-- UPDATE -->
+  <update id="updateRoleMenuPermissions">
+    UPDATE ROLE_MENU_PERMISSIONS
+    SET CAN_VIEW = #{CAN_VIEW}, CAN_EDIT = #{CAN_EDIT}
+    WHERE ROLE_ID = #{ROLE_ID} AND MENU_ID = #{MENU_ID}
+  </update>
+</mapper>

@@ -1,0 +1,2 @@
+Contains static data files or JSON files.
+This is typically used for data that needs to be read on the client-side.

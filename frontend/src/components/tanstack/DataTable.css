@@ -1,0 +1,44 @@
+/* Style for the table container */
+.table-container {
+  max-height: 100%;
+}
+
+/* Style for the header cells */
+.header-cell {
+  border: 1px solid #ddd;
+  padding: 8px; /* Smaller padding for a thinner look */
+  font-weight: bold; /* Bold header text */
+  text-align: center; /* Centered header text */
+  white-space: nowrap; /* Prevent text from wrapping */
+}
+
+/* Style for the body cells */
+.body-cell {
+  border: 1px solid #ddd;
+  padding: 6px; /* Smaller padding for a thinner look */
+  text-align: left; /* Left-aligned text for data cells */
+  font-weight: normal; /* Regular font weight for data cells */
+}
+
+/* Resizer styles */
+.resizer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 3px;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.1);
+  cursor: col-resize;
+  user-select: none;
+  touch-action: none;
+}
+
+@media (hover: hover) {
+  .resizer {
+    opacity: 0;
+  }
+
+  th:hover > .resizer {
+    opacity: 1;
+  }
+}

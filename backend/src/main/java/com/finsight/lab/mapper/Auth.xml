@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="Auth">
+    <!-- 유저 인증 -->
+    <select id="authenticateUser" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+        FROM USER_INFO
+        WHERE EMAIL = #{email} AND PASSWORD_HASH = #{password}
+    </select>
+
+	<select id="getUserDetailsByEmail" parameterType="string" resultType="map">
+	    SELECT USER_ID, USERNAME, EMAIL, PASSWORD_HASH, ROLE_ID, PASSWORD_RESET_REQUIRED
+	    FROM USER_INFO
+	    WHERE EMAIL = #{email}
+	</select>
+	
+	<select id="findMenuPermissionsByEmail" parameterType="string" resultType="map">
+	    SELECT 
+	        VMH.MENU_ID, 
+	        VMH.P_MENU_ID, 
+	        VMH.MENU_NAME, 
+	        VMH.PATH, 
+	        VMH.ORDER_NUM,
+	        VMH.LEVEL,
+	        COALESCE(RMP.CAN_VIEW, 'N') AS CAN_VIEW,
+	        COALESCE(RMP.CAN_EDIT, 'N') AS CAN_EDIT
+	    FROM 
+	        V_MENUHIERARCHY VMH
+	    JOIN 
+	        ROLE_MENU_PERMISSIONS RMP
+	        ON VMH.MENU_ID = RMP.MENU_ID
+	    WHERE 
+	        RMP.ROLE_ID = (
+	            SELECT ROLE_ID
+	            FROM USER_INFO
+	            WHERE EMAIL = #{EMAIL} 
+	        ) 
+	        AND RMP.CAN_VIEW = 'Y'    
+	        AND VMH.LANG_CODE = #{LANG_CODE} 
+	    ORDER BY 
+	        VMH.SORT_ORDER;
+	</select>
+
+    <!-- 모든 유저 조회 -->
+    <select id="findAll" parameterType="map" resultType="map">
+        SELECT USER_ID, USERNAME, EMAIL, ROLE_ID, USE_YN
+        FROM USER_INFO
+    </select>
+    <!-- Check if user exists by email -->
+    <!-- 중복 체크 -->
+    <select id="checkUserByEmail" parameterType="string" resultType="int">
+        SELECT COUNT(*)
+        FROM USER_INFO
+        WHERE EMAIL = #{email}
+    </select>
+
+    <!-- 사용자 등록 -->
+    <insert id="insertUser" parameterType="map">
+        INSERT INTO USER_INFO (
+            USERNAME,
+            EMAIL,
+            PASSWORD_HASH,
+            ROLE_ID,
+            USE_YN,
+            CREATED_AT
+        ) VALUES (
+            #{username},
+            #{email},
+            #{passwordHash},
+            #{roleId},
+            #{useYn},
+            CURRENT_TIMESTAMP
+        )
+    </insert>
+	<update id="updatePassword" parameterType="map">
+	    UPDATE USER_INFO
+	    SET PASSWORD_HASH = #{passwordHash}, PASSWORD_RESET_REQUIRED = #{PASSWORD_RESET_REQUIRED}
+	    WHERE EMAIL = #{email}
+	</update>
+	<select id="checkEmailExists" parameterType="map" resultType="int">
+	    SELECT COUNT(1)
+	    FROM USER_INFO
+	    WHERE EMAIL = #{email}
+	</select>
+</mapper>

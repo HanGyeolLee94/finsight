@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="Quote">
+<select id="getTopGainerData" resultType="map">
+	SELECT SYMBOL
+	     , NAME
+	     , OPEN_PRICE
+	     , FORMAT(PREVIOUS_CLOSE, 2) AS PREVIOUS_CLOSE
+	     , FORMAT(PRICE, 2) AS PRICE
+	     , FORMAT(CHANGES_PERCENTAGE, 2) AS CHANGES_PERCENTAGE
+	     , FORMAT(CHANGE_VALUE, 2) AS CHANGE_VALUE
+	     , CASE WHEN CHANGE_VALUE > 0 THEN 'up' WHEN CHANGE_VALUE &lt; 0 THEN 'down' END AS TREND
+	     , CONCAT(
+	           CASE 
+	               WHEN CHANGES_PERCENTAGE &lt; 0 THEN ''
+	               ELSE '+' 
+	           END, 
+	           FORMAT(CHANGE_VALUE, 2), ' (', 
+	           CASE 
+	               WHEN CHANGE_VALUE &lt; 0 THEN ''
+	               ELSE '+' 
+	           END, 
+	           FORMAT(CHANGES_PERCENTAGE, 2), '%', ')'
+	       ) AS CHANGES_DISPLAY
+	     , CONCAT(FORMAT(DAY_LOW, 2), ' - ', FORMAT(DAY_HIGH, 2)) AS DAY_RANGE
+	     , CONCAT(FORMAT(YEAR_LOW, 2), ' - ', FORMAT(YEAR_HIGH, 2)) AS YEAR_RANGE
+	     , DAY_LOW
+	     , DAY_HIGH
+	     , YEAR_HIGH
+	     , YEAR_LOW
+	     , MARKET_CAP
+	     , PRICE_AVG_50
+	     , PRICE_AVG_200
+	     , EXCHANGE
+	     , VOLUME
+	     , AVG_VOLUME
+	     , PE
+	     , DATE_FORMAT(EARNINGS_ANNOUNCEMENT, '%Y-%m-%d %H:%i:%s') AS EARNINGS_ANNOUNCEMENT
+	  FROM FMP_QUOTE_DATA
+	 WHERE CHANGE_VALUE > 0
+    <if test="SYMBOL != null and SYMBOL != ''">
+      AND SYMBOL LIKE CONCAT('%', #{SYMBOL}, '%')
+    </if>
+    <if test="NAME != null and NAME != ''">
+      AND NAME LIKE CONCAT('%', #{NAME}, '%')
+    </if>
+	 ORDER BY CAST(CHANGES_PERCENTAGE AS DECIMAL(10, 2)) DESC
+	 LIMIT 30
+</select>
+<select id="getTopLoserData" resultType="map">
+	SELECT SYMBOL
+	     , NAME
+	     , OPEN_PRICE
+	     , FORMAT(PREVIOUS_CLOSE, 2) AS PREVIOUS_CLOSE
+	     , FORMAT(PRICE, 2) AS PRICE
+	     , FORMAT(CHANGES_PERCENTAGE, 2) AS CHANGES_PERCENTAGE
+	     , FORMAT(CHANGE_VALUE, 2) AS CHANGE_VALUE
+	     , CASE WHEN CHANGE_VALUE > 0 THEN 'up' WHEN CHANGE_VALUE &lt; 0 THEN 'down' END AS TREND
+	     , CONCAT(
+	           CASE 
+	               WHEN CHANGES_PERCENTAGE &lt; 0 THEN ''
+	               ELSE '+' 
+	           END, 
+	           FORMAT(CHANGE_VALUE, 2), ' (', 
+	           CASE 
+	               WHEN CHANGE_VALUE &lt; 0 THEN ''
+	               ELSE '+' 
+	           END, 
+	           FORMAT(CHANGES_PERCENTAGE, 2), '%', ')'
+	       ) AS CHANGES_DISPLAY
+	     , CONCAT(FORMAT(DAY_LOW, 2), ' - ', FORMAT(DAY_HIGH, 2)) AS DAY_RANGE
+	     , CONCAT(FORMAT(YEAR_LOW, 2), ' - ', FORMAT(YEAR_HIGH, 2)) AS YEAR_RANGE
+	     , DAY_LOW
+	     , DAY_HIGH
+	     , YEAR_HIGH
+	     , YEAR_LOW
+	     , MARKET_CAP
+	     , PRICE_AVG_50
+	     , PRICE_AVG_200
+	     , EXCHANGE
+	     , VOLUME
+	     , AVG_VOLUME
+	     , PE
+	     , DATE_FORMAT(EARNINGS_ANNOUNCEMENT, '%Y-%m-%d %H:%i:%s') AS EARNINGS_ANNOUNCEMENT
+	  FROM FMP_QUOTE_DATA
+	 WHERE CHANGE_VALUE &lt; 0
+    <if test="SYMBOL != null and SYMBOL != ''">
+      AND SYMBOL LIKE CONCAT('%', #{SYMBOL}, '%')
+    </if>
+    <if test="NAME != null and NAME != ''">
+      AND NAME LIKE CONCAT('%', #{NAME}, '%')
+    </if>
+	 ORDER BY CAST(CHANGES_PERCENTAGE AS DECIMAL(10, 2)) ASC
+	 LIMIT 30
+</select>
+<select id="getSnp500Data" resultType="map">
+	SELECT FQD.SYMBOL
+	     , FQD.NAME
+	     , FQD.OPEN_PRICE
+	     , FORMAT(PREVIOUS_CLOSE, 2) AS PREVIOUS_CLOSE
+	     , FORMAT(PRICE, 2) AS PRICE
+	     , FORMAT(CHANGES_PERCENTAGE, 2) AS CHANGES_PERCENTAGE
+	     , FORMAT(CHANGE_VALUE, 2) AS CHANGE_VALUE
+	     , CASE WHEN CHANGE_VALUE > 0 THEN 'up' WHEN CHANGE_VALUE &lt; 0 THEN 'down' END AS TREND
+	     , CONCAT(
+	           CASE 
+	               WHEN CHANGES_PERCENTAGE &lt; 0 THEN ''
+	               ELSE '+' 
+	           END, 
+	           FORMAT(CHANGE_VALUE, 2), ' (', 
+	           CASE 
+	               WHEN CHANGE_VALUE &lt; 0 THEN ''
+	               ELSE '+' 
+	           END, 
+	           FORMAT(CHANGES_PERCENTAGE, 2), '%', ')'
+	       ) AS CHANGES_DISPLAY
+	     , CONCAT(FORMAT(DAY_LOW, 2), ' - ', FORMAT(DAY_HIGH, 2)) AS DAY_RANGE
+	     , CONCAT(FORMAT(YEAR_LOW, 2), ' - ', FORMAT(YEAR_HIGH, 2)) AS YEAR_RANGE
+	     , FQD.DAY_LOW
+	     , FQD.DAY_HIGH
+	     , FQD.YEAR_HIGH
+	     , FQD.YEAR_LOW
+	     , FQD.MARKET_CAP
+	     , FQD.PRICE_AVG_50
+	     , FQD.PRICE_AVG_200
+	     , FQD.EXCHANGE
+	     , FQD.VOLUME
+	     , FQD.AVG_VOLUME
+	     , FQD.PE
+	     , DATE_FORMAT(EARNINGS_ANNOUNCEMENT, '%Y-%m-%d %H:%i:%s') AS EARNINGS_ANNOUNCEMENT
+	  FROM FMP_QUOTE_DATA FQD
+	  JOIN SNP500_LIST SNPL ON FQD.SYMBOL = SNPL.SYMBOL
+    <where>
+	    <if test="SYMBOL != null and SYMBOL != ''">
+	      AND FQD.SYMBOL LIKE CONCAT('%', #{SYMBOL}, '%')
+	    </if>
+	    <if test="NAME != null and NAME != ''">
+	      AND FQD.NAME LIKE CONCAT('%', #{NAME}, '%')
+	    </if>
+    </where>
+	  ORDER BY FQD.MARKET_CAP DESC  
+</select>
+<select id="getIndexData" resultType="map">
+SELECT 
+    INDEX_CODE,
+    DATE,
+    OPEN_VALUE,
+    HIGH_VALUE,
+    LOW_VALUE,
+    CLOSE_VALUE,
+    VOLUME,
+    DIVIDENDS,
+    STOCK_SPLITS,
+    UPDATED_AT
+FROM (
+    SELECT 
+        INDEX_CODE,
+        DATE,
+        OPEN_VALUE,
+        HIGH_VALUE,
+        LOW_VALUE,
+        CLOSE_VALUE,
+        VOLUME,
+        DIVIDENDS,
+        STOCK_SPLITS,
+        UPDATED_AT
+    FROM 
+        INDEX_DATA
+    WHERE 
+        INDEX_CODE = #{INDEX_CODE}
+    ORDER BY 
+        DATE DESC
+    LIMIT #{LIMIT}
+) AS RECENT_DATA
+ORDER BY 
+    DATE ASC
+</select>
+
+<select id="getSnp500SectorCompanyCount" resultType="map">
+    SELECT 
+        SECTOR AS label,
+        COUNT(SYMBOL) AS value
+    FROM 
+        FMP_COMPANY_PROFILE
+    WHERE 
+        SYMBOL IN (
+            SELECT SYMBOL 
+            FROM SNP500_LIST 
+        )
+    GROUP BY 
+        SECTOR
+    ORDER BY 
+        VALUE DESC
+</select>
+
+<select id="getSNP500HeatMapData" resultType="map">
+	SELECT FQD.SYMBOL
+	     , FQD.NAME
+	     , FORMAT(FQD.PRICE, 2) AS PRICE
+	     , FORMAT(FQD.CHANGE_VALUE, 2) AS CHANGE_VALUE
+	     , FQD.MARKET_CAP
+	     , FCP.SECTOR
+	  FROM FMP_QUOTE_DATA FQD
+	  JOIN SNP500_LIST SNPL ON FQD.SYMBOL = SNPL.SYMBOL
+	  LEFT OUTER JOIN FMP_COMPANY_PROFILE FCP ON FQD.SYMBOL = FCP.SYMBOL
+	  ORDER BY FQD.MARKET_CAP DESC
+</select>
+<select id="getDowjonesHeatMapData" resultType="map">
+	SELECT FQD.SYMBOL
+	     , FQD.NAME
+	     , FORMAT(FQD.PRICE, 2) AS PRICE
+	     , FORMAT(FQD.CHANGE_VALUE, 2) AS CHANGE_VALUE
+	     , FQD.MARKET_CAP
+	     , FCP.SECTOR
+	  FROM FMP_QUOTE_DATA FQD
+	  JOIN DOWJONES_LIST SNPL ON FQD.SYMBOL = SNPL.SYMBOL
+	  LEFT OUTER JOIN FMP_COMPANY_PROFILE FCP ON FQD.SYMBOL = FCP.SYMBOL
+	  ORDER BY FQD.MARKET_CAP DESC
+</select>
+<select id="getNasdaq100HeatMapData" resultType="map">
+	SELECT FQD.SYMBOL
+	     , FQD.NAME
+	     , FORMAT(FQD.PRICE, 2) AS PRICE
+	     , FORMAT(FQD.CHANGE_VALUE, 2) AS CHANGE_VALUE
+	     , FQD.MARKET_CAP
+	     , FCP.SECTOR
+	  FROM FMP_QUOTE_DATA FQD
+	  JOIN NASDAQ100_LIST SNPL ON FQD.SYMBOL = SNPL.SYMBOL
+	  LEFT OUTER JOIN FMP_COMPANY_PROFILE FCP ON FQD.SYMBOL = FCP.SYMBOL
+	  ORDER BY FQD.MARKET_CAP DESC
+</select>
+</mapper>

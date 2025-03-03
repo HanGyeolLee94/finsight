@@ -1,0 +1,2 @@
+Contains the main application code.
+If you're using Next.js, this folder typically holds routes and page-related code.
