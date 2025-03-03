@@ -4,7 +4,7 @@ import { i18nRouter } from "next-i18n-router";
 import i18nConfig from "./i18nConfig";
 
 // Secret key setting
-const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+const secret = new TextEncoder().encode(process.env.FINSIGHT_JWT_SECRET);
 
 // JWT token validation function
 async function validateToken(token: string): Promise<boolean> {
