@@ -8,8 +8,8 @@ Finsight is a web application with a separate frontend and backend.
 
 ```
 ├── backend   # Backend source code
-├── frontend  # Frontend source code
 ├── docs      # Documentation and manuals
+├── frontend  # Frontend source code
 └── README.md  # Project documentation
 ```
 
