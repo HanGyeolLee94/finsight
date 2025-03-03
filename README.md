@@ -9,6 +9,7 @@ Finsight is a web application with a separate frontend and backend.
 ```
 ├── backend   # Backend source code
 ├── frontend  # Frontend source code
+├── docs      # Documentation and manuals
 └── README.md  # Project documentation
 ```
 
@@ -92,3 +93,7 @@ npm install
 npm run dev
 ```
 
+## Product Manual
+A detailed product manual is available for download. Please refer to the documentation for further instructions.
+
+📄 **[Download Product Manual](https://github.com/HanGyeolLee94/finsight/docs/FinSight Product Manual.pdf)**
