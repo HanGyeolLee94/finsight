@@ -6,6 +6,4 @@ set PASSWORD=5534
 set DATABASE=finsight
 set PORT=7306
 set SCRIPT_PATH=C:\code\nextspringapp\backend\script
-::set SCRIPT_PATH=C:\space\code\nextspringapp\backend\script
 set LOG_PATH=C:\code\nextspringapp\backend\script\log
-::set LOG_PATH=C:\space\code\nextspringapp\backend\script\log
